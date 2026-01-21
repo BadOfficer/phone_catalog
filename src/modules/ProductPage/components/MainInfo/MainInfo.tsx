@@ -13,11 +13,14 @@ import { ColorButton } from '../ColorButton';
 import classNames from 'classnames';
 import { CapacityButton } from '../CapacityButton';
 import { Button } from '@/modules/shared/components/Button';
-import { useCart } from '@/hooks/useCart';
-import { useFavourites } from '@/hooks/useFavourites';
 import { FaHeart, FaRegHeart } from 'react-icons/fa6';
 import { CartProduct } from '@/types/CartItem';
 import { SpecsList } from '@/modules/shared/components/SpecsList';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { toggle as cartToggle } from '@/features/cartSlice';
+import { isProductInCart } from '@/helpers/cartHelpers';
+import { isInFavourites } from '@/helpers/favouritesHelpers';
+import { toggle } from '@/features/favouritesSlice';
 
 interface Props {
   product: ProductDetailsWithArticle;
@@ -38,8 +41,7 @@ export const MainInfo: FC<Props> = ({ product }) => {
     resolution,
     processor,
   } = product;
-  const { inCart, toggleToCart } = useCart();
-  const { isFavourite, toggleFavourite } = useFavourites();
+  const favourites = useAppSelector(state => state.favourites);
 
   const normilizedColor = normilizeColor(color);
 
@@ -51,8 +53,16 @@ export const MainInfo: FC<Props> = ({ product }) => {
     color,
   );
 
-  const isInCart = inCart(article);
-  const isInFavourites = isFavourite(article);
+  const dispatch = useAppDispatch();
+  const { items } = useAppSelector(state => state.cart);
+
+  const toggleToCart = (product: CartProduct) => dispatch(cartToggle(product));
+
+  const isInCart = isProductInCart(items, article);
+
+  const inFavourites = isInFavourites(article, favourites);
+
+  const toggleFavourite = () => dispatch(toggle(article));
 
   const cartProduct: CartProduct = {
     id: article,
@@ -128,10 +138,10 @@ export const MainInfo: FC<Props> = ({ product }) => {
           squareBtn
           size="large"
           className={styles.likeBtn}
-          isSelected={isInFavourites}
-          onClick={() => toggleFavourite(article)}
+          isSelected={inFavourites}
+          onClick={toggleFavourite}
           startIcon={
-            isInFavourites ? <FaHeart size={16} /> : <FaRegHeart size={16} />
+            inFavourites ? <FaHeart size={16} /> : <FaRegHeart size={16} />
           }
         ></Button>
       </div>

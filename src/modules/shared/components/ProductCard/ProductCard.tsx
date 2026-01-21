@@ -5,13 +5,15 @@ import classNames from 'classnames';
 import styles from './ProductCard.module.scss';
 
 import { Product } from '@/types/Product';
-
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { Button } from '../Button';
-import { useFavourites } from '@/hooks/useFavourites';
-import { useCart } from '@/hooks/useCart';
 import { SpecsList } from '../SpecsList';
 import { prepareProductSpecs } from '@/helpers/productHelpers';
+import { toggle as cartToggle } from '@/features/cartSlice';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { isProductInCart } from '@/helpers/cartHelpers';
+import { isInFavourites } from '@/helpers/favouritesHelpers';
+import { toggle as favouritesToggle } from '@/features/favouritesSlice';
 
 interface Props {
   product: Product;
@@ -36,15 +38,17 @@ export const ProductCard: FC<Props> = React.memo(function ProductCard({
     category,
     itemId,
   } = product;
+  const dispatch = useAppDispatch();
+  const { items } = useAppSelector(state => state.cart);
+  const favourites = useAppSelector(state => state.favourites);
 
-  const { isFavourite, toggleFavourite } = useFavourites();
-  const { toggleToCart, inCart } = useCart();
+  const toggleToCart = (product: Product) => dispatch(cartToggle(product));
+
+  const isInCart = isProductInCart(items, id);
 
   const productLink = `/product/${itemId}`;
 
-  const isInFavourite = isFavourite(id);
-
-  const isInCart = inCart(id);
+  const isFavourite = isInFavourites(id, favourites);
 
   const specs = useMemo(
     () =>
@@ -55,6 +59,8 @@ export const ProductCard: FC<Props> = React.memo(function ProductCard({
       }),
     [screen, category, capacity, ram, prepareProductSpecs],
   );
+
+  const toggleFavourite = () => dispatch(favouritesToggle(id));
 
   return (
     <article className={classNames(styles.productCard, className)}>
@@ -99,12 +105,12 @@ export const ProductCard: FC<Props> = React.memo(function ProductCard({
         <Button
           variant="outline"
           size="medium"
-          isSelected={isInFavourite}
-          onClick={() => toggleFavourite(id)}
+          isSelected={isFavourite}
+          onClick={toggleFavourite}
           className={styles.likeBtn}
           squareBtn
           startIcon={
-            isInFavourite ? <FaHeart size={16} /> : <FaRegHeart size={16} />
+            isFavourite ? <FaHeart size={16} /> : <FaRegHeart size={16} />
           }
         />
       </div>

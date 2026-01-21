@@ -1,5 +1,7 @@
 import { ROUTES } from '@/constants/routes';
 import { SpecOption } from '@/modules/shared/types/SpecOption';
+import { Product } from '@/types/Product';
+import { getRandomValue } from './mathHelpers';
 
 export const getProductPath = (
   namespaceId: string,
@@ -60,4 +62,32 @@ export const prepareProductSpecs = (
     label: label[0].toUpperCase() + label.slice(1),
     value,
   }));
+};
+
+export const getRandomProducts = (
+  products: Product[],
+  limit: number,
+  exclude?: Product['id'],
+) => {
+  const generatedIds = new Set();
+
+  generatedIds.add(exclude);
+  const result = [];
+
+  while (result.length < limit && generatedIds.size < products.length) {
+    const randomValue = getRandomValue(0, products.length - 1);
+
+    if (generatedIds.has(randomValue)) {
+      continue;
+    }
+
+    generatedIds.add(randomValue);
+    result.push(products[randomValue]);
+  }
+
+  return result;
+};
+
+export const getProductsByIds = (ids: Product['id'][], products: Product[]) => {
+  return products.filter(item => ids.includes(item.id));
 };

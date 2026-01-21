@@ -1,9 +1,5 @@
 import { useDebounce } from '@/hooks/useDebounce';
 import { FC, useEffect, useState } from 'react';
-import { useFetch } from '../shared/hooks/useFetch';
-import { Product } from '@/types/Product';
-import { FetchOptions } from '@/types/FetchOptions';
-import { getProductsByQuery } from '@/api/product.service';
 import { Modal } from '@/modules/shared/components/Modal';
 
 import styles from './Search.module.scss';
@@ -11,6 +7,7 @@ import { IoClose } from 'react-icons/io5';
 import { SearchInput } from './components/SearchInput';
 import { SearchList } from './components/SearchList';
 import { Message } from '../shared/components/Message';
+import { useGetProductsQuery } from '@/services/products';
 
 interface Props {
   isOpen: boolean;
@@ -23,19 +20,16 @@ export const Search: FC<Props> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce<string>(query, 1000);
 
-  const { data, loading } = useFetch<Product[]>(
-    (options: FetchOptions) => {
-      if (debouncedQuery === '') {
-        return Promise.resolve([]);
-      }
-
-      return getProductsByQuery(debouncedQuery, ITEMS_TO_SHOW, options);
-    },
-    {
-      initialValue: [],
-      dependency: [debouncedQuery],
-    },
-  );
+  const { data, isLoading: loading } = useGetProductsQuery(undefined, {
+    selectFromResult: ({ data = [], isLoading }) => ({
+      data: data
+        .filter(item =>
+          item.name.toLowerCase().includes(query.trim().toLowerCase()),
+        )
+        .slice(0, ITEMS_TO_SHOW),
+      isLoading,
+    }),
+  });
 
   useEffect(() => {
     if (!isOpen) {

@@ -3,8 +3,9 @@ import { FC, memo } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import styles from './CartItem.module.scss';
 import { Counter } from '@/modules/shared/components/Counter';
-import { useCart } from '@/hooks/useCart';
 import { Link } from 'react-router-dom';
+import { useAppDispatch } from '@/app/hooks';
+import { changeProductCount, remove } from '@/features/cartSlice';
 
 interface Props {
   product: Product;
@@ -13,19 +14,22 @@ interface Props {
 
 export const CartItem: FC<Props> = memo(function CartItem({ product, count }) {
   const { id, name, image, fullPrice, price, itemId } = product;
-  const { changeProductCount: changeCount, removeFromCart } = useCart();
+
+  const dispatch = useAppDispatch();
 
   const isPrevDisabled = count === 1;
   const productLink = `/product/${itemId}`;
 
   const handleChangeProductCount = (newCount: number) => {
-    changeCount(product, newCount);
+    dispatch(changeProductCount({ product, newCount }));
   };
+
+  const removeFromCart = () => dispatch(remove(id));
 
   return (
     <article className={styles.card}>
       <div className={styles.mainContent}>
-        <button className={styles.removeBtn} onClick={() => removeFromCart(id)}>
+        <button className={styles.removeBtn} onClick={removeFromCart}>
           <IoMdClose size={16} />
         </button>
         <Link className={styles.preview} to={productLink}>
@@ -37,7 +41,7 @@ export const CartItem: FC<Props> = memo(function CartItem({ product, count }) {
       </div>
       <div className={styles.actions}>
         <Counter
-          value={count}
+          value={count ?? 0}
           onChange={handleChangeProductCount}
           isPrevDisabled={isPrevDisabled}
         />

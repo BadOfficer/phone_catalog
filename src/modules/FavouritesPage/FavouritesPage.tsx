@@ -2,34 +2,27 @@ import classNames from 'classnames';
 import { FavouritesBreadcrumbs } from './components/FavouritesBreadcrumbs';
 import styles from './FavouritesPage.module.scss';
 import { ProductsList } from '../shared/components/ProductsList';
-import { useFavourites } from '@/hooks/useFavourites';
-import { useFetch } from '../shared/hooks/useFetch';
-import { FetchOptions } from '@/types/FetchOptions';
-import { getProductsByIds } from '@/api/product.service';
 import { ErrorMessage } from '../shared/components/ErrorMessage';
 import { EmptyMessage } from '../shared/components/EmptyMessage';
+import { useGetProductsQuery } from '@/services/products';
+import { getProductsByIds } from '@/helpers/productHelpers';
+import { useAppSelector } from '@/app/hooks';
 
 export const FavouritesPage = () => {
-  const { favourites } = useFavourites();
+  const favourites = useAppSelector(state => state.favourites);
 
   const {
     data: products,
-    loading,
-    handleFetch,
-    error,
-  } = useFetch(
-    (options: FetchOptions) => {
-      if (favourites.length === 0) {
-        return Promise.resolve([]);
-      }
-
-      return getProductsByIds(favourites, options);
-    },
-    {
-      initialValue: [],
-      dependency: [favourites],
-    },
-  );
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useGetProductsQuery(undefined, {
+    selectFromResult: ({ data, isLoading, isError }) => ({
+      data: getProductsByIds(favourites, data ?? []),
+      isLoading,
+      isError,
+    }),
+  });
 
   return (
     <div className={classNames(styles.wrapper, 'container')}>
@@ -39,13 +32,13 @@ export const FavouritesPage = () => {
       <span className={styles.itemsCount}>{favourites.length} items</span>
 
       <section className={styles.mainContent}>
-        {error && (
+        {isError && (
           <div className={styles.messageWrapper}>
-            <ErrorMessage message={error} onRetry={handleFetch} />
+            <ErrorMessage message="Something went wrong" onRetry={refetch} />
           </div>
         )}
 
-        {!loading && !error && products.length === 0 && (
+        {!loading && !isError && products.length === 0 && (
           <div className={styles.messageWrapper}>
             <EmptyMessage message={`No favourites products`} />
           </div>

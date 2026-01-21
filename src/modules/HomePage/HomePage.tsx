@@ -2,18 +2,14 @@ import classNames from 'classnames';
 import styles from './HomePage.module.scss';
 
 import { MainSlider } from './components/MainSlider';
-import { useFetch } from '../shared/hooks/useFetch';
-import { Product } from '@/types/Product';
-import { getProducts } from '@/api/product.service';
 import { ProductsSlider } from '../shared/components/ProductsSlider';
 import { Categories } from './components/Categories';
 import { useMemo } from 'react';
 import { filterProducts } from '@/utils/filterProducts';
+import { useGetProductsQuery } from '@/services/products';
 
 export const HomePage = () => {
-  const { data: products, loading } = useFetch<Product[]>(getProducts, {
-    initialValue: [],
-  });
+  const { data: products = [], isLoading: loading } = useGetProductsQuery();
 
   const newestProducts = useMemo(() => {
     return filterProducts(products, {

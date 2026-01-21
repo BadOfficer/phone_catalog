@@ -1,6 +1,3 @@
-import { useFetch } from '../shared/hooks/useFetch';
-import { Product } from '@/types/Product';
-import { getProductsByCategory } from '@/api/product.service';
 import classNames from 'classnames';
 
 import styles from './CatalogPage.module.scss';
@@ -16,9 +13,9 @@ import { usePagination } from '../shared/hooks/usePagination';
 import { Category } from '@/types/Category';
 import { FC, useMemo } from 'react';
 import { PerPageOption } from '../shared/types/PerPageOption';
-import { FetchOptions } from '@/types/FetchOptions';
 import { ErrorMessage } from '../shared/components/ErrorMessage';
 import { EmptyMessage } from '../shared/components/EmptyMessage';
+import { useGetProductsQuery } from '@/services/products';
 
 interface Props {
   category: Category;
@@ -32,23 +29,19 @@ export const CatalogPage: FC<Props> = ({ category }) => {
   const productCategory = categories.find(cat => cat.type === category);
 
   const {
-    data: products,
-    loading,
-    error,
-    handleFetch,
-  } = useFetch<Product[]>(
-    (options: FetchOptions) => {
-      if (!productCategory) {
-        return Promise.resolve([]);
-      }
-
-      return getProductsByCategory(productCategory.type, options);
-    },
-    {
-      initialValue: [],
-      dependency: [category],
-    },
-  );
+    products = [],
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useGetProductsQuery(undefined, {
+    selectFromResult: ({ data, isLoading, isError }) => ({
+      products: productCategory
+        ? data?.filter(pr => pr.category === productCategory.type)
+        : [],
+      isLoading,
+      isError,
+    }),
+  });
 
   const sort = (searchParams.get('sort') || 'newest') as SortOptions;
   const perPage = (searchParams.get('perPage') || 'all') as PerPageOption;
@@ -75,8 +68,7 @@ export const CatalogPage: FC<Props> = ({ category }) => {
     [products, sort, pagination.startIndex, pagination.endIndex],
   );
 
-  const disabledFilters =
-    loading || Boolean(error) || preparedProducts.length === 0;
+  const disabledFilters = loading || isError || preparedProducts.length === 0;
 
   if (!productCategory) {
     return null;
@@ -105,13 +97,13 @@ export const CatalogPage: FC<Props> = ({ category }) => {
       </section>
 
       <section className={styles.mainContent}>
-        {error && (
+        {isError && (
           <div className={styles.messageWrapper}>
-            <ErrorMessage message={error} onRetry={handleFetch} />
+            <ErrorMessage message="Something went wrong" onRetry={refetch} />
           </div>
         )}
 
-        {!loading && !error && preparedProducts.length === 0 && (
+        {!loading && !isError && preparedProducts.length === 0 && (
           <div className={styles.messageWrapper}>
             <EmptyMessage
               message={`No ${productCategory.title.toLowerCase()} available`}

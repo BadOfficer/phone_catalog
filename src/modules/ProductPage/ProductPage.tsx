@@ -1,8 +1,4 @@
-import { ProductDetailsWithArticle } from '@/types/Product';
-import { useFetch } from '../shared/hooks/useFetch';
-import { getProductById } from '@/api/product.service';
 import { useParams } from 'react-router-dom';
-import { FetchOptions } from '@/types/FetchOptions';
 import { EmptyMessage } from '../shared/components/EmptyMessage';
 import { ErrorMessage } from '../shared/components/ErrorMessage';
 import { ProductPageBreadcrumbs } from './components/ProductPageBreadcrumbs';
@@ -13,6 +9,7 @@ import { BackLink } from '../shared/components/BackLink';
 import { Content } from './components/Content';
 import { Skeleton } from '../shared/components/Skeleton';
 import { ContentSkeleton } from './components/ContentSkeleton';
+import { useGetProductByIdQuery } from '@/services/products';
 
 export const ProductPage = () => {
   const { productId } = useParams<{
@@ -21,26 +18,19 @@ export const ProductPage = () => {
 
   const {
     data: productData,
-    loading,
-    error,
-    handleFetch,
-  } = useFetch<ProductDetailsWithArticle | null>(
-    (options: FetchOptions) =>
-      productId ? getProductById(productId, options) : Promise.resolve(null),
-    {
-      initialValue: null,
-      dependency: [productId],
-    },
-  );
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useGetProductByIdQuery(productId || '');
 
-  if (error) {
+  if (isError) {
     return (
       <div className={classNames('container', styles.wrapper)}>
         <div className={styles.backLinkWrapper}>
           <BackLink />
         </div>
         <div className={styles.messageWrapper}>
-          <ErrorMessage message={error} onRetry={handleFetch} />
+          <ErrorMessage message="Something went wrong..." onRetry={refetch} />
         </div>
       </div>
     );

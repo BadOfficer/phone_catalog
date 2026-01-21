@@ -4,11 +4,11 @@ import { ROUTES } from '@/constants/routes';
 import classNames from 'classnames';
 import { LuShoppingBag } from 'react-icons/lu';
 import { FaRegHeart } from 'react-icons/fa6';
-import { useFavourites } from '@/hooks/useFavourites';
-import { useCart } from '@/hooks/useCart';
 import { SearchButton } from '../../modules/shared/components/SearchButton';
 import { FC } from 'react';
 import { ThemeSwitcher } from '@/modules/shared/components/ThemeSwitcher';
+import { useAppSelector } from '@/app/hooks';
+import { calculateTotalItems } from '@/helpers/cartHelpers';
 
 const navigationLinkStyles = ({ isActive }: { isActive: boolean }) =>
   classNames(styles.menuNavLink, {
@@ -25,8 +25,10 @@ interface Props {
 }
 
 export const Menu: FC<Props> = ({ onSearch = () => {} }) => {
-  const { favourites } = useFavourites();
-  const { cart, totalItems } = useCart();
+  const { items } = useAppSelector(state => state.cart);
+  const favourites = useAppSelector(state => state.favourites);
+
+  const totalItems = calculateTotalItems(items);
 
   return (
     <div className={styles.menu}>
@@ -69,7 +71,7 @@ export const Menu: FC<Props> = ({ onSearch = () => {} }) => {
         </NavLink>
         <NavLink to={ROUTES.CART} className={actionLinkStyles}>
           <LuShoppingBag size={16} />
-          {cart.items.length > 0 && (
+          {items.length > 0 && (
             <span className={styles.actionLinkCount}>{totalItems}</span>
           )}
         </NavLink>

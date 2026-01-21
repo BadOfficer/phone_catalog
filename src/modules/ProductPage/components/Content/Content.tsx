@@ -1,4 +1,4 @@
-import { Product, ProductDetailsWithArticle } from '@/types/Product';
+import { ProductDetailsWithArticle } from '@/types/Product';
 import { FC, memo, useMemo } from 'react';
 
 import styles from './Content.module.scss';
@@ -7,9 +7,8 @@ import { MainInfo } from '../MainInfo';
 import { About } from '../About';
 import { TechSpecs } from '../TechSpecs';
 import { ProductsSlider } from '@/modules/shared/components/ProductsSlider';
-import { useFetch } from '@/modules/shared/hooks/useFetch';
-import { getRandomProducts } from '@/api/product.service';
-import { FetchOptions } from '@/types/FetchOptions';
+import { useGetProductsQuery } from '@/services/products';
+import { getRandomProducts } from '@/helpers/productHelpers';
 
 interface Props {
   product: ProductDetailsWithArticle;
@@ -34,12 +33,15 @@ export const Content: FC<Props> = memo(function Content({ product }) {
     cell,
   } = product;
 
-  const { data: products, loading } = useFetch<Product[]>(
-    (options: FetchOptions) =>
-      getRandomProducts(article, options, PRODUCTS_SLIDES_COUNT),
+  const { data: products = [], isLoading: loading } = useGetProductsQuery(
+    undefined,
     {
-      initialValue: [],
-      dependency: [article],
+      selectFromResult: ({ data, isLoading }) => ({
+        data: data
+          ? getRandomProducts(data, PRODUCTS_SLIDES_COUNT, article)
+          : [],
+        isLoading,
+      }),
     },
   );
 

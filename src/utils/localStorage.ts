@@ -7,14 +7,15 @@ export function setItem<T>(key: string, value: T) {
   }
 }
 
-export function getItem<T>(key: string) {
+export function getItem<T>(key: string, defaultValue: T): T {
   try {
     const data = localStorage.getItem(key);
 
-    return data ? (JSON.parse(data) as T) : undefined;
+    return data ? (JSON.parse(data) as T) : defaultValue;
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
+    return defaultValue;
   }
 }
 
@@ -29,6 +30,6 @@ export function removeItem(key: string) {
 
 export const storage = {
   save: <T>(key: string, value: T) => setItem<T>(key, value),
-  get: <T>(key: string) => getItem<T>(key),
+  get: <T>(key: string, defaultValue: T) => getItem<T>(key, defaultValue),
   remove: (key: string) => removeItem(key),
 };
