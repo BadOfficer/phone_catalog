@@ -1,21 +1,46 @@
-import React from 'react';
-import './App.scss';
+import { Outlet } from 'react-router-dom';
+import './styles/index.scss';
+import { Header } from './widgets/Header';
+import { Sidebar } from './widgets/Sidebar';
+import { Footer } from './widgets/Footer';
+import { useDisclosure } from './hooks/useDisclosure';
+import { Search } from './modules/Search';
 
-interface Props {
-  onClick: () => void;
-  children: React.ReactNode;
-}
+export const App = () => {
+  const {
+    isOpen: isSidebarOpen,
+    toggle: toggleSidebar,
+    close: closeSidebar,
+  } = useDisclosure(false, {
+    closeOnLocationChange: true,
+    lockScroll: true,
+  });
 
-export const Provider: React.FC<Props> = React.memo(({ onClick, children }) => (
-  <button type="button" onClick={onClick}>
-    {children}
-  </button>
-));
+  const {
+    isOpen: isSearchOpen,
+    toggle: toggleSearch,
+    close: closeSearch,
+  } = useDisclosure(false, {
+    lockScroll: true,
+    closeOnLocationChange: true,
+  });
 
-export const App: React.FC = () => {
   return (
-    <div className="starter">
-      <Provider onClick={() => ({})}>TodoList</Provider>
+    <div className="App">
+      <Header
+        isActiveMenu={isSidebarOpen}
+        toggleMenu={toggleSidebar}
+        onSearch={toggleSearch}
+        closeMenu={closeSidebar}
+      />
+      <Sidebar isActive={isSidebarOpen} />
+      <main className="main">
+        <Outlet />
+      </main>
+
+      <Footer />
+
+      <Search isOpen={isSearchOpen} onClose={closeSearch} />
     </div>
   );
 };
